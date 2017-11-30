@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+require 'ostruct'
+
+columns = ARGV[0].split(/,/)
+columns = columns.map do |s|
+  k, v = s.split(/=/)
+  values = v.split(/:/)
+  [k, values]
+end
+
+div_by = 1
+cols = []
+columns.each do |c|
+  column = OpenStruct.new
+  column.div_by = div_by
+  div_by *= c[1].size
+  column.mod_by = c[1].size
+  column.name = c[0]
+  column.states = c[1]
+  cols << column
+end
+
+largest = cols.reduce(0) do |sum,a| 
+  state_max = a.states.map(&:length).max
+  [sum, a.name.length, state_max].max
+end
+
+i = 0
+print "|"
+cols.each { |c| print " %-#{largest}s |" % [c.name] }
+puts
+print "|"
+cols.size.times do
+  (largest+2).times { print "-" }
+  print "|"
+end
+puts
+
+break_at = cols.reduce(1) { |sum,a| sum * a.states.size }
+
+loop do
+  print "|"
+  cols.each do |col|
+    divided = i / col.div_by
+    modded = divided % col.mod_by
+    print " %-#{largest}s |" % [col.states[modded]]
+  end
+  puts
+  i += 1
+  break if i == break_at
+end
